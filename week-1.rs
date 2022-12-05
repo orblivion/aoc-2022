@@ -6,17 +6,21 @@ fn main () {
 
     let elf_str_sections : Vec<&str> = file_str.trim().split("\n\n").collect();
 
-    let elf_calories : Option<i32> = elf_str_sections.iter().map(
-        |&a| {
-            let x : Vec<&str> = a.trim().split("\n").collect();
-            x.iter().map(
-                |&b| {
-                    b.to_string().parse::<i32>().unwrap()
+    let mut elf_calories : Vec<i32> = elf_str_sections.iter().map(
+        |&elf_str_section| {
+            let elf_strs : Vec<&str> = elf_str_section.trim().split("\n").collect();
+            elf_strs.iter().map(
+                |&calorie_str| {
+                    calorie_str.to_string().parse::<i32>().unwrap()
                 }
             ).sum()
         }
-    ).max();
+    ).collect();
 
+    elf_calories.sort();
+
+    let elf_calories_rev : Vec<i32> = elf_calories.iter().rev().map(|&x| x).collect();
     
-    println!("{}", elf_calories.unwrap());
+    println!("Top elf: {}", elf_calories_rev[0]);
+    println!("Top 3 elves: {}", elf_calories_rev[0] + elf_calories_rev[1] + elf_calories_rev[2]);
 }
