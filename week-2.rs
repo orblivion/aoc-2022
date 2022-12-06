@@ -49,14 +49,13 @@ fn main () {
                 shape_points + outcome_points
             })
         }
-    );
+    ).fold(Some(0), |acc : Option<i32>, next| acc.zip(next).map(|(acc, next)| acc + next));
 
     // map sum whatever
     
-    /*
     if let Some(points) = points {
+        println!("Total points: {}", points);
     } else {
-        println!("Failed to parse round: {}", points);
+        println!("Failed to parse!")
     }
-    */
 }

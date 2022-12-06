@@ -1,7 +1,6 @@
 use std::fs;
 
 fn main () {
-    // 
     let file_str = fs::read_to_string("week-1.input").expect("Failed to read file");
 
     let elf_str_sections : Vec<&str> = file_str.trim().split("\n\n").collect();
