@@ -104,19 +104,10 @@ fn main () {
                     Shape::Paper => 2,
                     Shape::Scissors => 3,
                 };
-                let outcome_points = match (me, them) {
-                    // Loss conditions
-                    (Shape::Rock, Shape::Paper) => 0,
-                    (Shape::Paper, Shape::Scissors) => 0,
-                    (Shape::Scissors, Shape::Rock) => 0,
-
-                    (me, them) => match me == them {
-                        // Draw conditions
-                        true => 3,
-
-                        // Win conditions (by elimination)
-                        false => 6
-                    },
+                let outcome_points = match instruction {
+                    Instruction::Win => 6,
+                    Instruction::Lose => 0,
+                    Instruction::Draw => 3,
                 };
                 shape_points + outcome_points
             })
