@@ -8,11 +8,10 @@ fn main () {
         |rucksack| {
             let rucksack : Vec<u8> = rucksack.bytes().collect();
             let compartment_len = rucksack.len() / 2;
-            let compartment_1 : HashSet<&u8> = rucksack[0..compartment_len - 1].iter().collect();
-            let compartment_2 : HashSet<&u8> = rucksack[compartment_len..rucksack.len() - 1].iter().collect();
+            let compartment_1 : HashSet<u8> = rucksack[0..compartment_len].iter().map(|&x| x).collect();
+            let compartment_2 : HashSet<u8> = rucksack[compartment_len..rucksack.len()].iter().map(|&x| x).collect();
 
-            let &&b = compartment_1.intersection(&compartment_2).next().unwrap();
-            b
+            compartment_1.intersection(&compartment_2).map(|&x| x).next().unwrap()
         }
     ).map(
         |letter| -> i32 {
