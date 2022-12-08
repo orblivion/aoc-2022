@@ -16,7 +16,7 @@ fn sum_letters(letters: &mut dyn Iterator<Item = u8>) -> i32 {
 }
 
 fn main () {
-    let file_str = fs::read_to_string("week-3.input").expect("Failed to read file");
+    let file_str = fs::read_to_string("day-3.input").expect("Failed to read file");
 
     let mut letters = file_str.trim().split("\n").map(
         |rucksack| {
@@ -33,7 +33,7 @@ fn main () {
 
     println!("Points: {}", points);
 
-    let file_str = fs::read_to_string("week-3.input2").expect("Failed to read file");
+    let file_str = fs::read_to_string("day-3.input2").expect("Failed to read file");
 
     let mut lines = file_str.trim().split("\n");
     let mut letters = std::iter::from_fn(move || {

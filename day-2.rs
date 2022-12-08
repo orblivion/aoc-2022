@@ -10,7 +10,7 @@ enum Instruction {
 }
 
 fn main () {
-    let file_str = fs::read_to_string("week-2.input").expect("Failed to read file");
+    let file_str = fs::read_to_string("day-2.input").expect("Failed to read file");
 
     let points = file_str.trim().split("\n").map(
         |round| {
