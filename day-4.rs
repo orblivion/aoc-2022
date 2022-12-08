@@ -33,7 +33,7 @@ fn main() {
             // e1_start's direction from e2_start is the opposite from the respective direction of
             // e1_end and e2_end. This means one fully includes the other.
             Overlap::Full
-        } else if (e1_start < e2_end) || (e2_start < e1_end) {
+        } else if (e1_start > e2_end) || (e2_start > e1_end) {
             // One is strictly before the other. No overlap.
             Overlap::None
         } else {
@@ -45,5 +45,5 @@ fn main() {
     let num_fulls = overlaps.iter().filter_map(|&overlap| match overlap{Overlap::Full => Some(()), _ => None}).count();
     let num_partials = overlaps.iter().filter_map(|&overlap| match overlap{Overlap::Partial => Some(()), _ => None}).count();
 
-    println!("Overlaps: full={} partial={}", num_fulls, num_partials)
+    println!("Overlaps: full={} partial={} total={}", num_fulls, num_partials, num_fulls + num_partials)
 }
