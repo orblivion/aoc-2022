@@ -4,7 +4,7 @@ use std::collections::HashMap;
 fn main() {
     let file_str = fs::read_to_string("day-5.input").expect("Failed to read file");
 
-    let mut lines = file_str.trim().split("\n");
+    let mut lines = file_str.trim_end().split("\n");
 
     let mut num_stacks : usize = 0;
 
@@ -25,6 +25,7 @@ fn main() {
 
     for row in initial_stacks {
         let mut row = row.chars();
+        println!("{:?}", row);
         for stack_num in 1.. {
             if !stacks.contains_key(&stack_num) {
                 stacks.insert(stack_num, Vec::new());
