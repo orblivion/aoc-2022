@@ -9,22 +9,22 @@ fn main() {
     let mut num_stacks : usize = 0;
 
     let initial_stacks = lines.by_ref().take_while(|line| {
-        println!("{:?}", line);
+        // println!("{:?}", line);
         let mut labels = line.split_whitespace();
         match labels.next() {
             Some("1") => {
                 num_stacks = labels.count() + 1; // since we already consumed one
-                println!("{:?}", num_stacks);
+                // println!("{:?}", num_stacks);
                 false
             },
             _ => true
         }
     });
 
-    let mut stacks : HashMap<usize, Vec<u8>> = HashMap::new();
+    let mut stacks : HashMap<usize, Vec<char>> = HashMap::new();
 
-    initial_stacks.map(|row| {
-        let mut row = row.bytes();
+    for row in initial_stacks {
+        let mut row = row.chars();
         for stack_num in 1.. {
             if !stacks.contains_key(&stack_num) {
                 stacks.insert(stack_num, Vec::new());
@@ -37,8 +37,7 @@ fn main() {
                 _ => break
             }
         }
-    });
+    };
 
-    initial_stacks.collect::<Vec<&str>>();
-    ()
+    println!("{:?}", stacks);
 }
