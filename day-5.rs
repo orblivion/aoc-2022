@@ -25,7 +25,7 @@ fn main() {
 
     for row in initial_stacks {
         let mut row = row.chars();
-        println!("{:?}", row);
+        // println!("{:?}", row);
         for stack_num in 1.. {
             if !stacks.contains_key(&stack_num) {
                 stacks.insert(stack_num, Vec::new());
@@ -39,6 +39,34 @@ fn main() {
             }
         }
     };
+
+    println!("{:?}", stacks);
+
+    let instructions = lines.by_ref().skip_while(|line| {
+        // println!("{:?}", line);
+        let mut labels = line.split_whitespace();
+        match labels.next() {
+            Some("1") => false,
+            _ => true
+        }
+    });   
+
+    for row in instructions {
+        let words : Vec<&str> = row.split(" ").collect();
+
+        let amount : i32 = words[1].to_string().parse().unwrap();
+        let from : usize = words[3].to_string().parse().unwrap();
+        let to : usize = words[5].to_string().parse().unwrap();
+
+        for _ in 0..amount {
+            let crate_val = stacks.get_mut(&from).map(|val| val.pop());
+            match crate_val {
+                Some(Some(crate_val)) => {stacks.get_mut(&to).map(|val| val.push(crate_val));},
+                Some(None) => println!("Stack {} ran out of crates!", from),
+                None => println!("Some other weird stuff happened!"),
+            };
+        }
+    }
 
     println!("{:?}", stacks);
 }
