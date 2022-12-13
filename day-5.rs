@@ -34,17 +34,21 @@ fn main() {
                   .zip(row.next())
                   .zip(row.next())
                   .map(|((a, b), c)| (a,b,c)) {
-                Some(('[', ' ', ']')) => (),
+                Some((' ', ' ', ' ')) => {
+                    row.next(); // space in between ']' and '[' if not at the end of the row
+                },
                 Some(('[', crate_val, ']')) => {
                     stacks.get_mut(&stack_num).unwrap().push(crate_val);
-                    row.next(); // space in between, maybe
+                    row.next(); // space in between ']' and '[' if not at the end of the row
                 },
                 _ => break
             }
         }
     };
 
-    println!("{:?}", stacks);
+    for stack in stacks.iter() {
+        println!("{:?}", stack);
+    }
 
     let instructions = lines.by_ref().skip_while(|line| {
         // println!("{:?}", line);
