@@ -50,7 +50,8 @@ fn main() {
         println!("{:?}", stack);
     }
 
-    let instructions = lines.by_ref().skip_while(|line| {
+    let instructions = lines.by_ref();
+    instructions.by_ref().take_while(|line| {
         // println!("{:?}", line);
         let mut labels = line.split_whitespace();
         match labels.next() {
@@ -62,19 +63,26 @@ fn main() {
     for row in instructions {
         let words : Vec<&str> = row.split(" ").collect();
 
-        let amount : i32 = words[1].to_string().parse().unwrap();
-        let from : usize = words[3].to_string().parse().unwrap();
-        let to : usize = words[5].to_string().parse().unwrap();
+        match words[..] {
+            ["move", amount, "from", from, "to", to] => {
+                let amount : i32 = amount.to_string().parse().unwrap();
+                let from : usize = from.to_string().parse().unwrap();
+                let to : usize = to.to_string().parse().unwrap();
 
-        for _ in 0..amount {
-            let crate_val = stacks.get_mut(&from).map(|val| val.pop());
-            match crate_val {
-                Some(Some(crate_val)) => {stacks.get_mut(&to).map(|val| val.push(crate_val));},
-                Some(None) => println!("Stack {} ran out of crates!", from),
-                None => println!("Some other weird stuff happened!"),
-            };
-        }
+                for _ in 0..amount {
+                    let crate_val = stacks.get_mut(&from).map(|val| val.pop());
+                    match crate_val {
+                        Some(Some(crate_val)) => {stacks.get_mut(&to).map(|val| val.push(crate_val));},
+                        Some(None) => println!("Stack {} ran out of crates!", from),
+                        None => println!("Some other weird stuff happened!"),
+                    };
+                }
+            }
+            _ => ()
+        };
     }
 
-    println!("{:?}", stacks);
+    for stack in stacks.iter() {
+        println!("{:?}", stack);
+    }
 }
