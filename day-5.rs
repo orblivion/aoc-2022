@@ -6,15 +6,13 @@ fn main() {
 
     let mut lines = file_str.trim_end().split("\n");
 
-    let mut num_stacks : usize = 0;
+    let reader = lines.by_ref();
 
-    let initial_stacks = lines.by_ref().take_while(|line| {
+    let initial_stacks = reader.take_while(|line| {
         // println!("{:?}", line);
         let mut labels = line.split_whitespace();
         match labels.next() {
             Some("1") => {
-                num_stacks = labels.count() + 1; // since we already consumed one
-                // println!("{:?}", num_stacks);
                 false
             },
             _ => true
@@ -50,15 +48,7 @@ fn main() {
         println!("{:?}", stack);
     }
 
-    let instructions = lines.by_ref();
-    instructions.by_ref().take_while(|line| {
-        // println!("{:?}", line);
-        let mut labels = line.split_whitespace();
-        match labels.next() {
-            Some("1") => false,
-            _ => true
-        }
-    });   
+    let instructions = reader;
 
     for row in instructions {
         let words : Vec<&str> = row.split(" ").collect();
