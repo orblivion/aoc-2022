@@ -44,8 +44,15 @@ fn main() {
         }
     };
 
-    for stack in stacks.iter() {
-        println!("{:?}", stack);
+    for stack_num in 1.. {
+        if !stacks.contains_key(&stack_num) {
+            break;
+        }
+        println!("{} {:?} (before)", stack_num, stacks[&stack_num]);
+        stacks.insert(stack_num,
+            stacks[&stack_num].iter().map(|&x| x).rev().collect()
+        );
+        println!("{} {:?} (before - rev)", stack_num, stacks[&stack_num]);
     }
 
     let instructions = reader;
@@ -55,11 +62,16 @@ fn main() {
 
         match words[..] {
             ["move", amount, "from", from, "to", to] => {
+
+                println!("{:?}", ["move", amount, "from", from, "to", to]);
+
                 let amount : i32 = amount.to_string().parse().unwrap();
                 let from : usize = from.to_string().parse().unwrap();
                 let to : usize = to.to_string().parse().unwrap();
 
                 for _ in 0..amount {
+                    println!("{} {:?} (during)", from, stacks.get_mut(&from));
+                    println!("{} {:?} (during)", to, stacks.get_mut(&to));
                     let crate_val = stacks.get_mut(&from).map(|val| val.pop());
                     match crate_val {
                         Some(Some(crate_val)) => {stacks.get_mut(&to).map(|val| val.push(crate_val));},
@@ -67,12 +79,29 @@ fn main() {
                         None => println!("Some other weird stuff happened!"),
                     };
                 }
+                println!("{} {:?} (during)", from, stacks.get_mut(&from));
+                println!("{} {:?} (during)", to, stacks.get_mut(&to));
             }
             _ => ()
         };
     }
 
     for stack in stacks.iter() {
-        println!("{:?}", stack);
+        println!("{:?} (after)", stack);
     }
+
+    let mut result : Vec<char> = Vec::new();
+
+    for stack_num in 1..10 {
+        match stacks.get_mut(&stack_num).map(|val| val.pop()) {
+            Some(Some(l)) => {
+                result.push(l);
+                println!("{}, {:?} {:?}", stack_num, l, stacks.get_mut(&stack_num));
+            }
+            None => break,
+            _ => println!("Some weird stuff happened!"),
+        }
+    }
+
+    println!("{}", result.iter().collect::<String>())
 }
