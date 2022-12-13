@@ -30,8 +30,12 @@ fn main() {
             if !stacks.contains_key(&stack_num) {
                 stacks.insert(stack_num, Vec::new());
             }
-            match row.next().zip(row.next()).zip(row.next()) {
-                Some(((_, crate_val), _)) => {
+            match row.next()
+                  .zip(row.next())
+                  .zip(row.next())
+                  .map(|((a, b), c)| (a,b,c)) {
+                Some(('[', ' ', ']')) => (),
+                Some(('[', crate_val, ']')) => {
                     stacks.get_mut(&stack_num).unwrap().push(crate_val);
                     row.next(); // space in between, maybe
                 },
