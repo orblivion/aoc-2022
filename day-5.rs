@@ -25,9 +25,6 @@ fn main() {
         let mut row = row.chars();
         // println!("{:?}", row);
         for stack_num in 1.. {
-            if !stacks.contains_key(&stack_num) {
-                stacks.insert(stack_num, Vec::new());
-            }
             match row.next()
                   .zip(row.next())
                   .zip(row.next())
@@ -36,6 +33,9 @@ fn main() {
                     row.next(); // space in between ']' and '[' if not at the end of the row
                 },
                 Some(('[', crate_val, ']')) => {
+                    if !stacks.contains_key(&stack_num) {
+                        stacks.insert(stack_num, Vec::new());
+                    }
                     stacks.get_mut(&stack_num).unwrap().push(crate_val);
                     row.next(); // space in between ']' and '[' if not at the end of the row
                 },
