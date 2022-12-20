@@ -139,5 +139,9 @@ fn sum_small<'a>(dir : &Dir<'a>) -> (u32, u32) {
         }
     }
 
-    return (total, accum + total)
+    if total <= 10000 {
+        return (total, accum + total)
+    } else {
+        return (total, accum)
+    }
 }
