@@ -2,6 +2,7 @@ use std::fs;
 use std::collections::HashMap;
 
 struct Dir<'a> {
+    // TODO name is implicit in the key into contents of the parent Dir. Probably remove it.
     name: &'a str,
     contents: HashMap<&'a str, FSObj<'a>>,
 }
@@ -24,54 +25,67 @@ fn main() {
         contents: HashMap::new(),
     };
 
-    let mut dir_stack = vec![&mut root];
+    let mut commands = file_str.trim().split('\n');
 
-    for line in file_str.trim().split('\n') {
+    build(&mut root, &mut commands, 0);
+}
+
+// Returns whether we are doing `cd /`
+fn build<'a>(dir : &mut Dir<'a>, commands : &mut impl Iterator<Item = &'a str>, level : usize) -> bool {
+    loop {
+        let line = if let Some(line) = commands.next() {
+            line
+        } else {
+            break
+        };
+
         match line.trim().split(' ').collect::<Vec<&str>>()[..] {
             // Don't care! The only non-command output is the output of ls so we know where it came from.
             ["$", "ls"] => (),
 
             ["$", "cd", "/"] => {
-                dir_stack.drain(1..);
-            },
+                return true; // signal that we want to unravel the recursion back to root
+            }
 
             ["$", "cd", ".."] => {
-                if dir_stack.len() == 1 {
-                    println!("Can't get to the parent of root");
+                if level == 0 {
+                    println!("Can't get to the parent of the root directory");
                     break;
                 }
+                return false; // signal that we only want to go up one directory
             },
 
             ["$", "cd", dir_name] => {
-                let len = dir_stack.len();
-                let contents = &mut dir_stack.get_mut(len - 1).unwrap().contents;
-                if !contents.contains_key(&dir_name) {
-                    contents.insert(dir_name, FSObj::Dir(Dir {
+                // If this is our first visit into this directory, create it.
+                if !dir.contents.contains_key(&dir_name) {
+                    dir.contents.insert(dir_name, FSObj::Dir(Dir {
                         name: dir_name,
                         contents: HashMap::new(),
                     }));
                 };
-                let new_dir = match &contents[dir_name] {
+
+                // Get the directory, whether or not we just made it
+                let mut next_dir = match dir.contents.get_mut(dir_name).unwrap() {
                     FSObj::Dir(dir) => dir,
                     _ => {
                         // Could happen if it was declared as a file in a previous run
                         println!("Trying to cd into a file: {}", line);
-                        break;
+                        return false; // TODO return some other value indicating error
                     }
                 };
-                dir_stack.push(&mut new_dir)
+                if build(&mut next_dir, commands, level + 1) && level > 0 {
+                    return true // we got the signal to unravel back to root. return and pass the signal on.
+                }
             },
 
             // Don't care! We'll get the dir info when we cd into it and then ls
             ["dir", _] => (),
 
             [size, file_name] => {
-                let len = dir_stack.len();
-                let cur_dir = &mut dir_stack[len - 1];
                 match size.to_string().parse::<u32>() {
                     Ok(size) => {
-                        if !cur_dir.contents.contains_key(&file_name) {
-                            cur_dir.contents.insert(file_name, FSObj::File(File {
+                        if !dir.contents.contains_key(&file_name) {
+                            dir.contents.insert(file_name, FSObj::File(File {
                                 name: file_name,
                                 size: size,
                             }));
@@ -89,4 +103,6 @@ fn main() {
             }
         }
     }
+
+    return false // end of commands
 }
