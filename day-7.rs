@@ -30,7 +30,14 @@ fn main() {
 
     let (total, accumulated) = sum_small(&root);
 
-    println!("total: {} accumulated: {}", total, accumulated)
+    println!("total: {} accumulated: {}", total, accumulated);
+
+    const TOTAL_SPACE : u32 = 70000000;
+    let required_space = TOTAL_SPACE - total;
+
+    let (_, min_delete) = get_min_delete(&root, required_space);
+
+    println!("min_delete: {}", min_delete);
 }
 
 // Returns whether we are doing `cd /`
@@ -136,5 +143,33 @@ fn sum_small<'a>(dir : &Dir<'a>) -> (u32, u32) {
         return (total, accum + total)
     } else {
         return (total, accum)
+    }
+}
+
+fn get_min_delete<'a>(dir : &Dir<'a>, required_space : u32) -> (u32, u32) {
+    let mut total : u32 = 0;
+    let mut best_min_delete = 0;
+
+    for (_, fs_obj) in dir.contents.iter() {
+        match fs_obj {
+            FSObj::Dir(next_dir) => {
+                let (this_total, this_min_delete) = get_min_delete(next_dir, required_space);
+
+                if this_min_delete <= required_space && this_min_delete > best_min_delete {
+                    best_min_delete = this_min_delete;
+                }
+                total = this_total;
+
+            },
+            FSObj::File(file) => {
+                total += file.size;
+            },
+        }
+    }
+
+    if total <= required_space && total > best_min_delete {
+        return (total, total);
+    } else {
+        return (total, best_min_delete);
     }
 }
