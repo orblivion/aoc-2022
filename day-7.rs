@@ -19,19 +19,19 @@ enum FSObj<'a> {
 fn main() {
     let file_str = fs::read_to_string("day-7.input").expect("Failed to read file");
 
-    let root = Dir {
+    let mut root = Dir {
         name: "",
         contents: HashMap::new(),
     };
 
-    let mut dir_stack = vec![&root];
+    let mut dir_stack = vec![&mut root];
 
     for line in file_str.trim().split('\n') {
         match line.trim().split(' ').collect::<Vec<&str>>()[..] {
             // Don't care! The only non-command output is the output of ls so we know where it came from.
             ["$", "ls"] => (),
 
-            ["$", "cd", "/"] => dir_stack = vec![&root],
+            ["$", "cd", "/"] => dir_stack = vec![&mut root],
 
             ["$", "cd", ".."] => {
                 dir_stack.pop();
@@ -58,7 +58,7 @@ fn main() {
                         break;
                     }
                 };
-                dir_stack.push(&new_dir)
+                dir_stack.push(&mut new_dir)
             },
 
             // Don't care! We'll get the dir info when we cd into it and then ls
