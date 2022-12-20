@@ -3,29 +3,24 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 struct Dir<'a> {
-    // TODO name is implicit in the key into contents of the parent Dir. Probably remove it.
-    name: &'a str,
     contents: HashMap<&'a str, FSObj<'a>>,
 }
 
 #[derive(Debug)]
-struct File<'a> {
-    // TODO maybe get rid of this name too?
-    name: &'a str,
+struct File {
     size: u32,
 }
 
 #[derive(Debug)]
 enum FSObj<'a> {
     Dir(Dir<'a>),
-    File(File<'a>),
+    File(File),
 }
 
 fn main() {
     let file_str = fs::read_to_string("day-7.input").expect("Failed to read file");
 
     let mut root = Dir {
-        name: "",
         contents: HashMap::new(),
     };
 
@@ -73,7 +68,6 @@ fn build<'a>(dir : &mut Dir<'a>, commands : &mut impl Iterator<Item = &'a str>, 
                 // If this is our first visit into this directory, create it.
                 if !dir.contents.contains_key(&dir_name) {
                     dir.contents.insert(dir_name, FSObj::Dir(Dir {
-                        name: dir_name,
                         contents: HashMap::new(),
                     }));
                 };
@@ -101,7 +95,6 @@ fn build<'a>(dir : &mut Dir<'a>, commands : &mut impl Iterator<Item = &'a str>, 
                     Ok(size) => {
                         if !dir.contents.contains_key(&file_name) {
                             dir.contents.insert(file_name, FSObj::File(File {
-                                name: file_name,
                                 size: size,
                             }));
                         };
@@ -126,7 +119,7 @@ fn sum_small<'a>(dir : &Dir<'a>) -> (u32, u32) {
     let mut total : u32 = 0;
     let mut accum : u32 = 0;
 
-    for (name, fs_obj) in dir.contents.iter() {
+    for (_, fs_obj) in dir.contents.iter() {
         match fs_obj {
             FSObj::Dir(next_dir) => {
                 let (this_total, this_accum) = sum_small(next_dir);
