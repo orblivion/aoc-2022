@@ -31,11 +31,12 @@ fn main() {
             // Don't care! The only non-command output is the output of ls so we know where it came from.
             ["$", "ls"] => (),
 
-            ["$", "cd", "/"] => dir_stack = vec![&mut root],
+            ["$", "cd", "/"] => {
+                dir_stack.drain(1..);
+            },
 
             ["$", "cd", ".."] => {
-                dir_stack.pop();
-                if dir_stack.len() == 0 {
+                if dir_stack.len() == 1 {
                     println!("Can't get to the parent of root");
                     break;
                 }
