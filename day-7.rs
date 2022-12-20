@@ -28,16 +28,20 @@ fn main() {
 
     build(&mut root, &mut commands, 0);
 
-    let (total, accumulated) = sum_small(&root);
+    let (total_used, accumulated) = sum_small(&root);
 
-    println!("total: {} accumulated: {}", total, accumulated);
+    println!("total_used: {} accumulated: {}", total_used, accumulated);
 
     const TOTAL_SPACE : u32 = 70000000;
-    let required_space = TOTAL_SPACE - total;
+    const REQUIRED_SPACE : u32 = 30000000;
 
-    let (_, min_delete) = get_min_delete(&root, required_space);
+    let available_space = TOTAL_SPACE - total_used;
+    let required_to_free = REQUIRED_SPACE - available_space;
+    assert!(required_to_free > 0, "Already have enough space");
 
-    println!("min_delete: {}", min_delete);
+    let (_, min_delete) = get_min_delete(&root, required_to_free);
+
+    println!("min_delete: {} required_to_free: {}", min_delete, required_to_free);
 }
 
 // Returns whether we are doing `cd /`
@@ -146,19 +150,19 @@ fn sum_small<'a>(dir : &Dir<'a>) -> (u32, u32) {
     }
 }
 
-fn get_min_delete<'a>(dir : &Dir<'a>, required_space : u32) -> (u32, u32) {
+fn get_min_delete<'a>(dir : &Dir<'a>, required_to_free : u32) -> (u32, u32) {
     let mut total : u32 = 0;
     let mut best_min_delete = 0;
 
     for (_, fs_obj) in dir.contents.iter() {
         match fs_obj {
             FSObj::Dir(next_dir) => {
-                let (this_total, this_min_delete) = get_min_delete(next_dir, required_space);
+                let (this_total, this_min_delete) = get_min_delete(next_dir, required_to_free);
 
-                if this_min_delete <= required_space && this_min_delete > best_min_delete {
+                if this_min_delete >= required_to_free && (this_min_delete < best_min_delete || best_min_delete == 0) {
                     best_min_delete = this_min_delete;
                 }
-                total = this_total;
+                total += this_total;
 
             },
             FSObj::File(file) => {
@@ -167,7 +171,7 @@ fn get_min_delete<'a>(dir : &Dir<'a>, required_space : u32) -> (u32, u32) {
         }
     }
 
-    if total <= required_space && total > best_min_delete {
+    if total >= required_to_free && best_min_delete == 0 {
         return (total, total);
     } else {
         return (total, best_min_delete);
