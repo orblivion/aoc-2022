@@ -28,5 +28,19 @@ fn main() {
         }).collect()
     }
 
+    let mut maxes : Vec<u8> = (0..map.len()).map(|_| b'0' - 1).collect();
+
+    for (x, row) in map.iter().enumerate() {
+        maxes = row.iter().zip(maxes).enumerate().rev().map(|(y, (&height, prev_max))| {
+            if height > prev_max {
+                wins.insert((x as u8, y as u8));
+                return height;
+            }
+            return prev_max;
+        }).collect()
+    }
+
+
+
     println!("{}", wins.len())
 }
