@@ -1,6 +1,51 @@
 use std::fs;
 use std::collections::HashSet;
 
+fn score(map : &Vec<Vec<u8>>, tree_x : usize, tree_y : usize) -> u32 {
+    let map_height = map.len();
+    let map_width = map[0].len();
+
+    let mut scenic_score : u32 = 1;
+
+    let mut seen : u32 = 0;
+    for x in tree_x + 1..map_height {
+        seen += 1;
+        if (map[x][tree_y]) >= map[tree_x][tree_y] {
+            break; // count the tree above, but no more in this direction
+        }
+    }
+    scenic_score *= seen;
+
+    let mut seen : u32 = 0;
+    for x in (0..tree_x).rev() {
+        seen += 1;
+        if (map[x][tree_y]) >= map[tree_x][tree_y] {
+            break; // count the tree above, but no more in this direction
+        }
+    }
+    scenic_score *= seen;
+
+    let mut seen : u32 = 0;
+    for y in tree_y + 1..map_width {
+        seen += 1;
+        if (map[tree_x][y]) >= map[tree_x][tree_y] {
+            break; // count the tree above, but no more in this direction
+        }
+    }
+    scenic_score *= seen;
+
+    let mut seen : u32 = 0;
+    for y in (0..tree_y).rev() {
+        seen += 1;
+        if (map[tree_x][y]) >= map[tree_x][tree_y] {
+            break; // count the tree above, but no more in this direction
+        }
+    }
+    scenic_score *= seen;
+
+    return scenic_score
+}
+
 fn main() {
     let file_str = fs::read_to_string("day-8.input").expect("Failed to read file");
 
@@ -68,5 +113,18 @@ fn main() {
         }
     ).for_each(drop);
 
-    println!("total: {}", wins.len())
+    println!("total visible from outside: {}", wins.len());
+
+    let max_scenic_score = (
+        map.iter().enumerate().map(
+            |(x, row)| {
+                    row.iter().enumerate().map(
+                        |(y, _)| {
+                            score(&map, x, y)
+                        }
+                    ).max()
+            }
+        ).max()
+    ).unwrap().unwrap();
+    println!("max_scenic_score: {}", max_scenic_score);
 }
