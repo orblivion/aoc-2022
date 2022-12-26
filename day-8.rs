@@ -16,8 +16,10 @@ fn main() {
 
     let mut wins : HashSet<(u8, u8)> = HashSet::new();
 
+    let map_width = map[0].len();
+
     map.iter().enumerate().fold(
-        (0..map.len()).map(|_| b'0' - 1).collect(),
+        (0..map_width).map(|_| b'0' - 1).collect(),
         |maxes : Vec<u8>, (x, row)| {
             row.iter().zip(maxes).enumerate().map(|(y, (&height, prev_max))| {
                 if height > prev_max {
@@ -29,10 +31,10 @@ fn main() {
         }
     );
 
-    map.iter().enumerate().fold(
-        (0..map.len()).map(|_| b'0' - 1).collect(),
+    map.iter().enumerate().rev().fold(
+        (0..map_width).map(|_| b'0' - 1).collect(),
         |maxes : Vec<u8>, (x, row)| {
-            row.iter().zip(maxes).enumerate().rev().map(|(y, (&height, prev_max))| {
+            row.iter().zip(maxes).enumerate().map(|(y, (&height, prev_max))| {
                 if height > prev_max {
                     wins.insert((x as u8, y as u8));
                     return height;
@@ -42,5 +44,29 @@ fn main() {
         }
     );
 
-    println!("{}", wins.len())
+    map.iter().enumerate().map(
+        |(x, row)| {
+            row.iter().enumerate().fold(b'0' - 1, |prev_max, (y, &height)| {
+                if height > prev_max {
+                    wins.insert((x as u8, y as u8));
+                    return height;
+                }
+                return prev_max;
+            })
+        }
+    ).for_each(drop);
+
+    map.iter().enumerate().map(
+        |(x, row)| {
+            row.iter().enumerate().rev().fold(b'0' - 1, |prev_max, (y, &height)| {
+                if height > prev_max {
+                    wins.insert((x as u8, y as u8));
+                    return height;
+                }
+                return prev_max;
+            })
+        }
+    ).for_each(drop);
+
+    println!("total: {}", wins.len())
 }
