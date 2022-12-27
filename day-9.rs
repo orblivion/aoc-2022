@@ -58,14 +58,26 @@ fn main() {
                                     |snake, _| {
                                         let next_head = head_move(snake[0], head_delta);
 
-                                        let next_snake : Vec<(i32, i32)> = vec![next_head].into_iter().chain(
-                                            snake[..].into_iter().zip(snake[1..].into_iter()).map(
-                                                |(&segment, &next_segment)| tail_move(segment, next_segment)
-                                            )
-                                        ).collect();
+                                        // fold through. each iteration, return a more complete
+                                        // snake. take the last item from *the last completed
+                                        // part-snake* and use it to determine where to move the
+                                        // next segment.
+                                        let next_snake : Vec<(i32, i32)> = snake[1..].into_iter().fold(
+                                            vec![next_head],
+                                            |snake_part, &next_segment| {
+                                                let &last_segment = snake_part.last().unwrap();
+                                                snake_part.into_iter()
+                                                .chain(
+                                                    vec![tail_move(last_segment, next_segment)].into_iter()//.map(|&a|a)
+                                                )
+                                                .collect()
+                                            }
+                                        );
 
                                         tail_visits.insert(next_snake[9]);
                                         neck_visits.insert(next_snake[1]);
+                                        // println!("{:?}", next_snake);
+
                                         next_snake
                                     }
                                 )
