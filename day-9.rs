@@ -12,10 +12,18 @@ fn head_move(head: (i32, i32), d_head: (i32, i32)) -> (i32, i32) {
 fn tail_move(head: (i32, i32), tail: (i32, i32)) -> (i32, i32) {
     let (head_x, head_y) = head;
     let (tail_x, tail_y) = tail;
-    (
-        max(min(head_x, tail_x + 1), tail_x - 1),
-        max(min(head_y, tail_y + 1), tail_y - 1),
-    )
+
+    let new_tail = if (head_x - tail_x).abs() == 2 || (head_y - tail_y).abs() == 2 {
+        (
+            max(min(head_x, tail_x + 1), tail_x - 1),
+            max(min(head_y, tail_y + 1), tail_y - 1),
+        )
+    } else {
+        (tail_x, tail_y)
+    };
+
+    // println!("{:?} {:?}->{:?}", head, tail, new_tail);
+    new_tail
 }
 
 fn main() {
