@@ -5,20 +5,10 @@ enum Instruction {
     AddX(i32),
 }
 
-// enum CyclePart {Start, During, After}
-
-// TODO - type = ? and then bring back the differ?
 struct SignalStateChange(i32);
 
 #[derive(Copy, Clone)]
 struct SignalState(i32);
-
-/*
-struct SignalState {
-    x : i32,
-//     cycle: (u32, CyclePart),
-}
-*/
 
 impl Instruction {
     fn from_line(line : &str) -> Result<Instruction, String> {
@@ -34,7 +24,9 @@ impl Instruction {
     fn to_cycle_changes(self : &Instruction) -> Vec<SignalStateChange> {
         match self {
             Instruction::Noop => vec![SignalStateChange(0)].into_iter().collect(),
-            Instruction::AddX(i) => vec![SignalStateChange(0), SignalStateChange(*i)].into_iter().collect(),
+            Instruction::AddX(i) => vec![SignalStateChange(0), SignalStateChange(*i)]
+                .into_iter()
+                .collect(),
         }
     }
 }
@@ -79,19 +71,6 @@ fn main() {
                 // iteration I'm intending to grow it. If this fails, it's a programming error.
             }
         );
-
-    /*
-    let signal_strength = signal_states
-        .iter()
-        .skip(20) // TODO -off-by-one?
-        .enumerate()
-        .flat_map(|(n, x)| ifn )
-        .iter()
-        .map(|enumerated_signal_states| {
-            let (cycle, signal_state) = enumerated_signal_states.last();
-            signal_state.x * cycle
-        });
-    */
 
     // TODO -off-by-one with the 20?
     let signal_strength: i32 = (20..221)
