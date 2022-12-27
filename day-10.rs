@@ -7,7 +7,7 @@ enum Instruction {
 
 struct SignalStateChange(i32);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct SignalState(i32);
 
 impl Instruction {
@@ -77,4 +77,20 @@ fn main() {
         .map(|cycle| signal_states[cycle - 1].power(cycle as i32))
         .sum();
     println!("Signal strength: {}", signal_strength);
+
+    let readout = signal_states
+        .iter()
+        .enumerate()
+        .map(|(position, state)| {
+            let SignalState(x) = state;
+            if (x - (position % 40) as i32).abs() <= 1 {'#'} else {'.'}
+        })
+        .collect::<String>()
+        .as_bytes()
+        .chunks(40)
+        .map(|chunk| chunk.iter().map(|&ch| ch as char).collect::<String>())
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    println!("\n\n{}", readout);
 }
