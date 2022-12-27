@@ -1,12 +1,18 @@
 use std::fs;
+use std::cmp::min;
+use std::cmp::max;
 use std::collections::HashSet;
 
-fn head_move((x, y), (dx, dy)) -> (u32, u32) {
-    return (x + dx, y + dy)
+fn head_move(head: (i32, i32), d_head: (i32, i32)) -> (i32, i32) {
+    let (x, y) = head;
+    let (dx, dy) = d_head;
+    (x + dx, y + dy)
 }
 
-fn tail_move((head_x, head_y), (tail_x, tail_y)) -> (u32, u32) {
-    return (
+fn tail_move(head: (i32, i32), tail: (i32, i32)) -> (i32, i32) {
+    let (head_x, head_y) = head;
+    let (tail_x, tail_y) = tail;
+    (
         max(min(head_x, tail_x + 1), tail_x - 1),
         max(min(head_y, tail_y + 1), tail_y - 1),
     )
@@ -15,32 +21,51 @@ fn tail_move((head_x, head_y), (tail_x, tail_y)) -> (u32, u32) {
 fn main() {
     let file_str = fs::read_to_string("day-9.input").expect("Failed to read file");
 
-    let mut tail_visits = HashSet<(u32, u32)> = HashSet::new()
+    let mut tail_visits : HashSet<(i32, i32)> = HashSet::new();
+
+    let start = (0, 0);
+    tail_visits.insert(start);
 
     file_str.trim().split("\n").fold(
-        ((0, 0), (0, 0)),
-        |((head, tail) row)| row.split_once(' ').and_then(
-            |(dir, distance)| {
-                distance.to_string().parse::<u32>() {
-                    Ok(distance) => {
-                        let head_delta = match dir {
-                            'D': (1, 0),
-                            'U': (-1, 0),
-                            'L': (0, -1),
-                            'R': (0, 1),
-                        }
-                        let next_head = head_move(head, head_delta);
-                        let next_tail = tail_move(next_head, tail);
+        (start, start),
+        |(head, tail), row| {
+            row.split_once(' ').map(
+                |(direction, distance)| {
+                    match distance.to_string().parse::<i32>() {
+                        Ok(distance) => {
+                            match direction {
+                                "D" => Some((1, 0)),
+                                "U" => Some((-1, 0)),
+                                "L" => Some((0, -1)),
+                                "R" => Some((0, 1)),
+                                _ => None,
+                            }.map(|head_delta| {
+                                (0..distance).fold(
+                                    (head, tail),
+                                    |(head, tail), _| {
+                                        let next_head = head_move(head, head_delta);
+                                        let next_tail = tail_move(next_head, tail);
 
-                        tail_visits.insert((x as u32, y as u32));
-                        return next_head, next_tail
-                    }
-                    _ => {
-                        println!("invalid distance")
+                                        tail_visits.insert(next_tail);
+                                        (next_head, next_tail)
+                                    }
+                                )
+                            }).unwrap_or_else(|| {
+                                println!("invalid direction {}", direction);
+                                (head, tail)
+                            })
+                        },
+                        _ => {
+                            println!("invalid distance {}", distance);
+                            (head, tail)
+                        }
                     }
                 }
-            }
-        )
-    )
-    println!("Tail visits {} locations", tail_visit.len())
+            ).unwrap_or_else(|| {
+                println!("Parsing error for line {}", row);
+                (head, tail)
+            })
+        }
+    );
+    println!("Tail visits {} locations", tail_visits.len())
 }
