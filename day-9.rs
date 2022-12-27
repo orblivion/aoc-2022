@@ -9,34 +9,39 @@ fn head_move(head: (i32, i32), d_head: (i32, i32)) -> (i32, i32) {
     (x + dx, y + dy)
 }
 
-fn tail_move(head: (i32, i32), tail: (i32, i32)) -> (i32, i32) {
-    let (head_x, head_y) = head;
-    let (tail_x, tail_y) = tail;
+fn tail_move(segment: (i32, i32), next_segment: (i32, i32)) -> (i32, i32) {
+    let (segment_x, segment_y) = segment;
+    let (next_segment_x, next_segment_y) = next_segment;
 
-    let new_tail = if (head_x - tail_x).abs() == 2 || (head_y - tail_y).abs() == 2 {
+    let new_next_segment = if
+        (segment_x - next_segment_x).abs() == 2 ||
+        (segment_y - next_segment_y).abs() == 2
+    {
         (
-            max(min(head_x, tail_x + 1), tail_x - 1),
-            max(min(head_y, tail_y + 1), tail_y - 1),
+            max(min(segment_x, next_segment_x + 1), next_segment_x - 1),
+            max(min(segment_y, next_segment_y + 1), next_segment_y - 1),
         )
     } else {
-        (tail_x, tail_y)
+        (next_segment_x, next_segment_y)
     };
 
-    // println!("{:?} {:?}->{:?}", head, tail, new_tail);
-    new_tail
+    // println!("{:?} {:?}->{:?}", segment, next_segment, new_next_segment);
+    new_next_segment
 }
 
 fn main() {
     let file_str = fs::read_to_string("day-9.input").expect("Failed to read file");
 
     let mut tail_visits : HashSet<(i32, i32)> = HashSet::new();
+    let mut neck_visits : HashSet<(i32, i32)> = HashSet::new();
 
-    let start = (0, 0);
-    tail_visits.insert(start);
+    let start : Vec<(i32, i32)> = (0..10).map(|_| (0, 0)).collect();
+    tail_visits.insert(start[9]);
+    neck_visits.insert(start[1]);
 
     file_str.trim().split("\n").fold(
-        (start, start),
-        |(head, tail), row| {
+        start,
+        |snake, row| {
             row.split_once(' ').map(
                 |(direction, distance)| {
                     match distance.to_string().parse::<i32>() {
@@ -49,31 +54,38 @@ fn main() {
                                 _ => None,
                             }.map(|head_delta| {
                                 (0..distance).fold(
-                                    (head, tail),
-                                    |(head, tail), _| {
-                                        let next_head = head_move(head, head_delta);
-                                        let next_tail = tail_move(next_head, tail);
+                                    snake,
+                                    |snake, _| {
+                                        let next_head = head_move(snake[0], head_delta);
 
-                                        tail_visits.insert(next_tail);
-                                        (next_head, next_tail)
+                                        let next_snake : Vec<(i32, i32)> = vec![next_head].into_iter().chain(
+                                            snake[..].into_iter().zip(snake[1..].into_iter()).map(
+                                                |(&segment, &next_segment)| tail_move(segment, next_segment)
+                                            )
+                                        ).collect();
+
+                                        tail_visits.insert(next_snake[9]);
+                                        neck_visits.insert(next_snake[1]);
+                                        next_snake
                                     }
                                 )
                             }).unwrap_or_else(|| {
                                 println!("invalid direction {}", direction);
-                                (head, tail)
+                                Vec::new()
                             })
                         },
                         _ => {
                             println!("invalid distance {}", distance);
-                            (head, tail)
+                            Vec::new()
                         }
                     }
                 }
             ).unwrap_or_else(|| {
                 println!("Parsing error for line {}", row);
-                (head, tail)
+                Vec::new()
             })
         }
     );
-    println!("Tail visits {} locations", tail_visits.len())
+    println!("Tail visits {} locations", tail_visits.len());
+    println!("Heck visits {} locations", neck_visits.len());
 }
