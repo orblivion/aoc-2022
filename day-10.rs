@@ -72,10 +72,9 @@ fn main() {
             }
         );
 
-    // TODO -off-by-one with the 20?
-    let signal_strength: i32 = (19..220)
+    let signal_strength: i32 = (20..221)
         .step_by(40)
-        .map(|cycle| signal_states[cycle].power(cycle as i32))
+        .map(|cycle| signal_states[cycle - 1].power(cycle as i32))
         .sum();
     println!("Signal strength: {}", signal_strength);
 }
