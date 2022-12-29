@@ -4,19 +4,23 @@ type WorryVal = i32;
 type MonkeyIndex = usize;
 type MonkeyBusiness = u32;
 
+#[derive(Clone)]
 enum Operator {Mult, Add}
+
+#[derive(Clone)]
+enum Operand {Old, Number(WorryVal)}
 
 struct Monkey {
     index : MonkeyIndex,
     items : Vec<WorryVal>,
     pass_func : (WorryVal, MonkeyIndex, MonkeyIndex),
-    operation : (Operator, WorryVal),
+    operation : (Operand, Operator, Operand),
 
     pass_count : MonkeyBusiness,
 }
 
 fn read_monkeys(file_str: &str) -> Result<Vec<Monkey>, String> {
-    file_str.split("\n\n").enumerate().map(|(index, monkey_string)| {
+    file_str.trim().split("\n\n").enumerate().map(|(index, monkey_string)| {
         let monkey = Monkey::read(monkey_string)?;
         assert!(monkey.index == index, "wrong monkey index on read");
         Ok(monkey)
@@ -25,6 +29,23 @@ fn read_monkeys(file_str: &str) -> Result<Vec<Monkey>, String> {
 
 fn relax(worry : WorryVal) -> WorryVal {
     worry / 3
+}
+
+fn parse_operand(s : &str) -> Result<Operand, String> {
+    match s {
+        "old" => Ok(Operand::Old),
+        i => i.parse::<WorryVal>()
+            .map(|i| Operand::Number(i))
+            .map_err(|e| format!("Invalid operand: {} - {}", s, e)),
+    }
+}
+
+fn parse_operator(s : &str) -> Result<Operator, String> {
+    match s {
+        "+" => Ok(Operator::Add),
+        "*" => Ok(Operator::Mult),
+        _ => Err(format!("Invalid operator: {}", s))
+    }
 }
 
 impl Monkey {
@@ -53,21 +74,23 @@ impl Monkey {
             _ => Err(["Invalid items line: ", lines[1]].join(" ")),
         }?;
 
-        let operation = match lines[2].split("Operation: new = old").map(str::trim).collect::<Vec<&str>>()[..] {
+        let operation = match lines[2].split("Operation: new =").map(str::trim).collect::<Vec<&str>>()[..] {
             ["", operation] => {
                 match operation.split(" ").collect::<Vec<&str>>()[..] {
-                    [operator, operand] => operand.parse::<WorryVal>()
-                        .map_err(|e| format!("Invalid operation: {} - {}", lines[2], e))
-                        .map(|operand| match operator {
-                            "+" => Ok((Operator::Add, operand)),
-                            "*" => Ok((Operator::Mult, operand)),
-                            _ => Err(["Invalid operation: ", lines[2]].join(" ")),
-                        }),
-                    _ => Err(["Invalid operation: ", lines[2]].join(" ")),
+                    [left, operator, right] => {
+                        (|| {
+                            let left = parse_operand(left)?;
+                            let operator = parse_operator(operator)?;
+                            let right = parse_operand(right)?;
+                            Ok((left, operator, right))
+                        })()
+                        .map_err(|e: String| format!("Invalid operation: {} - {}", lines[2], e))
+                    }
+                    _ => Err(format!("Invalid operation: {}", lines[2]))
                 }
             }
-            _ => Err(["Invalid operation: ", lines[2]].join(" ")),
-        }??; // Result flattening is unstable as of this writing
+            _ => Err(format!("Invalid operation: {}", lines[2]))
+        }?;
 
         let pass_divisible_by = match lines[3].split("Test: divisible by").collect::<Vec<&str>>()[..] {
             ["", i] => i.trim().parse::<WorryVal>().map_err(|x| x.to_string()),
@@ -98,9 +121,18 @@ impl Monkey {
 
         let changes = processing_monkey.items.iter()
             .map(|worry|{
-                let worry = match processing_monkey.operation {
-                    (Operator::Mult, operand) => worry * operand,
-                    (Operator::Add, operand) => worry * operand,
+                let (left, operator, right) = processing_monkey.operation.clone();
+                let left = match left {
+                    Operand::Old => *worry,
+                    Operand::Number(i) => i,
+                };
+                let right = match right {
+                    Operand::Old => *worry,
+                    Operand::Number(i) => i,
+                };
+                let worry = match operator {
+                    Operator::Mult => left * right,
+                    Operator::Add => left + right,
                 };
                 let worry = relax(worry);
                 let (divisible_by, if_success, if_fail) = processing_monkey.pass_func;
