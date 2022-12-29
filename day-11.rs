@@ -66,7 +66,7 @@ impl Monkey {
                 }
             }
             _ => Err(["Invalid operation: ", lines[2]].join(" ")),
-        }??; // No Result flattening available
+        }??; // Result flattening is unstable as of this writing
 
         let pass_divisible_by = match lines[3].split("Test: divisible by").collect::<Vec<&str>>()[..] {
             ["", i] => i.trim().parse::<WorryVal>().map_err(|x| x.to_string()),
@@ -94,22 +94,29 @@ impl Monkey {
 
     fn process(monkeys : &mut Vec<Monkey>, processing_index : MonkeyIndex) {
         let processing_monkey = &mut monkeys[processing_index];
-        let mut pass_count = processing_monkey.pass_count;
-        processing_monkey.items.iter().for_each(|worry|{
-            let worry = match processing_monkey.operation {
-                (Operator::Mult, operand) => worry * operand,
-                (Operator::Add, operand) => worry * operand,
-            };
-            let worry = relax(worry);
-            let (divisible_by, if_success, if_fail) = processing_monkey.pass_func;
-            if worry % divisible_by == 0 {
-                monkeys[if_success].items.push(worry)
-            } else {
-                monkeys[if_fail].items.push(worry)
-            }
-            pass_count += 1;
-        });
-        processing_monkey.pass_count = pass_count;
+
+        let changes = processing_monkey.items.iter()
+            .map(|worry|{
+                let worry = match processing_monkey.operation {
+                    (Operator::Mult, operand) => worry * operand,
+                    (Operator::Add, operand) => worry * operand,
+                };
+                let worry = relax(worry);
+                let (divisible_by, if_success, if_fail) = processing_monkey.pass_func;
+                if worry % divisible_by == 0 {
+                    return (if_success, worry)
+                } else {
+                    return (if_fail, worry)
+                }
+            }).collect::<Vec<(MonkeyIndex, WorryVal)>>();
+
+        changes
+            .into_iter()
+            .for_each(|(to_index, worry)| monkeys[to_index].items.push(worry));
+
+        let processing_monkey = &mut monkeys[processing_index];
+
+        processing_monkey.pass_count = processing_monkey.items.len() as MonkeyBusiness;
         processing_monkey.items = Vec::new()
     }
 
@@ -125,17 +132,20 @@ impl Monkey {
 }
 
 fn main() {
-    let file_str = fs::read_to_string("day-10.input").expect("Failed to read file");
+    let file_str = fs::read_to_string("day-11.input").expect("Failed to read file");
 
-    read_monkeys(&file_str[..])
+    let monkey_business = read_monkeys(&file_str[..])
     .map(|mut monkeys| {
         for _round in 0..20 {
             for index in 0..monkeys.len() {
                 Monkey::process(&mut monkeys, index)
             }
         }
+        Monkey::monkey_business(monkeys)
+    });
 
-        println!("Monkey Business: {}", Monkey::monkey_business(monkeys));
-    })
-    .map_err(|E| println!("Error: {}", E));
+    match monkey_business {
+        Ok(monkey_business) => println!("Monkey Business: {}", monkey_business),
+        Err(e) => println!("Error: {}", e),
+    };
 }
