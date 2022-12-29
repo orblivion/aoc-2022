@@ -1,8 +1,8 @@
 use std::fs;
 
-type WorryVal = i32;
+type WorryVal = i64;
 type MonkeyIndex = usize;
-type MonkeyBusiness = u32;
+type MonkeyBusiness = u64;
 
 #[derive(Clone, Debug)]
 enum Operator {Mult, Add}
@@ -154,7 +154,7 @@ impl Monkey {
         processing_monkey.items = Vec::new()
     }
 
-    fn monkey_business(monkeys : Vec<Monkey>) -> MonkeyBusiness {
+    fn monkey_business(monkeys : &Vec<Monkey>) -> MonkeyBusiness {
         let mut top = monkeys
             .iter()
             .map(|monkey| monkey.pass_count)
@@ -168,18 +168,30 @@ impl Monkey {
 fn main() {
     let file_str = fs::read_to_string("day-11.input").expect("Failed to read file");
 
-    let monkey_business = read_monkeys(&file_str[..])
+    let monkey_businesses = read_monkeys(&file_str[..])
     .map(|mut monkeys| {
         for _round in 0..20 {
             for index in 0..monkeys.len() {
                 Monkey::process(&mut monkeys, index)
             }
         }
-        Monkey::monkey_business(monkeys)
+        let monkey_business_20 = Monkey::monkey_business(&monkeys);
+
+        for _round in 0..(10000 - 20) {
+            for index in 0..monkeys.len() {
+                Monkey::process(&mut monkeys, index)
+            }
+        }
+        let monkey_business_10000 = Monkey::monkey_business(&monkeys);
+
+        (monkey_business_20, monkey_business_10000)
     });
 
-    match monkey_business {
-        Ok(monkey_business) => println!("Monkey Business: {}", monkey_business),
+    match monkey_businesses {
+        Ok((monkey_business_20, monkey_business_10000)) => {
+            println!("Monkey Business at 20: {}", monkey_business_20);
+            println!("Monkey Business at 10000: {}", monkey_business_10000);
+        },
         Err(e) => println!("Error: {}", e),
     };
 }
