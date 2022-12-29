@@ -38,10 +38,11 @@ impl Monkey {
         let index = match lines[0].split("Monkey ").collect::<Vec<&str>>()[..] {
             ["", i] => match i.split(':').collect::<Vec<&str>>()[..] {
                 [i, ""] => i.parse::<MonkeyIndex>().map_err(|x| x.to_string()),
-                _ => Err(["Invalid index line: ", lines[0]].join(" ")),
+                _ => Err("".to_string()),
             },
-            _ => Err(["Invalid index line: ", lines[0]].join(" ")),
-        }?;
+            _ => Err("".to_string())
+        }
+        .map_err(|e| format!("Invalid index line: {} - {}", lines[0], e))?;
 
         let items = match lines[1].split("Starting items: ").collect::<Vec<&str>>()[..] {
             ["", worries] => worries
@@ -56,7 +57,7 @@ impl Monkey {
             ["", operation] => {
                 match operation.split(" ").collect::<Vec<&str>>()[..] {
                     [operator, operand] => operand.parse::<WorryVal>()
-                        .map_err(|x| x.to_string())
+                        .map_err(|e| format!("Invalid operation: {} - {}", lines[2], e))
                         .map(|operand| match operator {
                             "+" => Ok((Operator::Add, operand)),
                             "*" => Ok((Operator::Mult, operand)),
