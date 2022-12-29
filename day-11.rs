@@ -150,7 +150,7 @@ impl Monkey {
 
         let processing_monkey = &mut monkeys[processing_index];
 
-        processing_monkey.pass_count = processing_monkey.items.len() as MonkeyBusiness;
+        processing_monkey.pass_count += processing_monkey.items.len() as MonkeyBusiness;
         processing_monkey.items = Vec::new()
     }
 
