@@ -4,12 +4,13 @@ type WorryVal = i32;
 type MonkeyIndex = usize;
 type MonkeyBusiness = u32;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Operator {Mult, Add}
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Operand {Old, Number(WorryVal)}
 
+#[derive(Debug)]
 struct Monkey {
     index : MonkeyIndex,
     items : Vec<WorryVal>,
