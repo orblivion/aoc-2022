@@ -1,6 +1,6 @@
 use std::fs;
 
-type WorryVal = i64;
+type WorryVal = u64;
 type MonkeyIndex = usize;
 type MonkeyBusiness = u64;
 
@@ -10,7 +10,7 @@ enum Operator {Mult, Add}
 #[derive(Clone, Debug)]
 enum Operand {Old, Number(WorryVal)}
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Monkey {
     index : MonkeyIndex,
     items : Vec<WorryVal>,
@@ -117,7 +117,7 @@ impl Monkey {
         })
     }
 
-    fn process(monkeys : &mut Vec<Monkey>, processing_index : MonkeyIndex) {
+    fn process(monkeys : &mut Vec<Monkey>, processing_index : MonkeyIndex, do_relax : bool) {
         let processing_monkey = &mut monkeys[processing_index];
 
         let changes = processing_monkey.items.iter()
@@ -135,7 +135,11 @@ impl Monkey {
                     Operator::Mult => left * right,
                     Operator::Add => left + right,
                 };
-                let worry = relax(worry);
+                let worry = if do_relax {
+                    relax(worry)
+                } else {
+                    worry
+                };
                 let (divisible_by, if_success, if_fail) = processing_monkey.pass_func;
                 if worry % divisible_by == 0 {
                     return (if_success, worry)
@@ -169,20 +173,22 @@ fn main() {
     let file_str = fs::read_to_string("day-11.input").expect("Failed to read file");
 
     let monkey_businesses = read_monkeys(&file_str[..])
-    .map(|mut monkeys| {
-        for _round in 0..20 {
-            for index in 0..monkeys.len() {
-                Monkey::process(&mut monkeys, index)
+    .map(|monkeys| {
+        let mut relax_monkeys = monkeys.clone();
+        for round in 0..20 {
+            for index in 0..relax_monkeys.len() {
+                Monkey::process(&mut relax_monkeys, index, true)
             }
         }
-        let monkey_business_20 = Monkey::monkey_business(&monkeys);
+        let monkey_business_20 = Monkey::monkey_business(&relax_monkeys);
 
-        for _round in 0..(10000 - 20) {
-            for index in 0..monkeys.len() {
-                Monkey::process(&mut monkeys, index)
+        let mut no_relax_monkeys = monkeys.clone();
+        for round in 0..10000 {
+            for index in 0..no_relax_monkeys.len() {
+                Monkey::process(&mut no_relax_monkeys, index, false)
             }
         }
-        let monkey_business_10000 = Monkey::monkey_business(&monkeys);
+        let monkey_business_10000 = Monkey::monkey_business(&no_relax_monkeys);
 
         (monkey_business_20, monkey_business_10000)
     });
