@@ -89,12 +89,8 @@ fn relax_always(worry : WorryVal, relax_amount : WorryVal) -> WorryVal {
     worry / relax_amount
 }
 
-fn relax_on_divisible(worry : WorryVal, relax_amount : WorryVal) -> WorryVal {
-    if worry % relax_amount == 0 {
-        worry / relax_amount
-    } else {
-        worry
-    }
+fn relax_after_threshold(worry : WorryVal, relax_amount : WorryVal) -> WorryVal {
+    worry % relax_amount
 }
 
 fn parse_operand(s : &str) -> Result<Operand, String> {
@@ -182,7 +178,7 @@ impl Monkey {
         })
     }
 
-    fn process(monkeys : &mut Vec<Monkey>, processing_index : MonkeyIndex, relax_amount : WorryVal, should_relax_on_divisible : bool) {
+    fn process(monkeys : &mut Vec<Monkey>, processing_index : MonkeyIndex, relax_amount : WorryVal, should_relax_after_threshold : bool) {
         let processing_monkey = &mut monkeys[processing_index];
 
         let changes = processing_monkey.items.iter()
@@ -202,8 +198,8 @@ impl Monkey {
                     Operator::Add => left + right,
                 };
                 // println!("{} {}", worry, relax_amount);
-                let worry = if should_relax_on_divisible {
-                    relax_on_divisible(worry, relax_amount)
+                let worry = if should_relax_after_threshold {
+                    relax_after_threshold(worry, relax_amount)
                 } else {
                     relax_always(worry, relax_amount)
                 };
@@ -251,7 +247,7 @@ fn main() {
 
         let mut relax_factors_monkeys = monkeys.clone();
         let relax_factor = get_relax_factor(&relax_factors_monkeys);
-        for round in 0..10000 {
+        for _round in 0..10000 {
             // println!("{}", round);
             for index in 0..relax_factors_monkeys.len() {
                 Monkey::process(&mut relax_factors_monkeys, index, relax_factor, true);
