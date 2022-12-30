@@ -1,4 +1,5 @@
 use std::fs;
+use std::collections::HashMap;
 
 type WorryVal = u64;
 type MonkeyIndex = usize;
@@ -20,6 +21,62 @@ struct Monkey {
     pass_count : MonkeyBusiness,
 }
 
+fn factor_number(number: WorryVal) -> HashMap::<WorryVal, u32> {
+    let mut number = number;
+    let mut factors : HashMap<WorryVal, u32>= HashMap::new();
+
+    'outer: for factor in 2.. {
+        // Don't care if it's prime. For instance for something divisible by 4, it'll hit 2 twice,
+        // taking care of the 4. So we'll only be saving primes.
+        loop {
+            if number == 1 {
+                break 'outer
+            }
+            if number % factor == 0 {
+                number /= factor;
+                if factors.contains_key(&factor) {
+                    factors.insert(factor, factors[&factor] + 1);
+                } else {
+                    factors.insert(factor, 1);
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    return factors
+}
+
+fn merge_factors(factors : &mut HashMap::<WorryVal, u32>, new_factors : HashMap::<WorryVal, u32>) {
+    for (factor, count) in new_factors {
+        if !factors.contains_key(&factor) || count > factors[&factor] {
+            factors.insert(factor, count);
+        }
+    }
+}
+
+// Factor every number in the system and multiply it together
+fn get_relax_factor(monkeys : &Vec<Monkey>) -> WorryVal {
+    let mut factors : HashMap<WorryVal, u32>= HashMap::new();
+
+    for monkey in monkeys {
+        let (criterion, _, _) = monkey.pass_func;
+        let new_factors = factor_number(criterion);
+        merge_factors(&mut factors, new_factors);
+    }
+
+    let mut relax_factor = 1;
+
+    for (factor, count) in factors {
+        for _ in 0..count {
+            relax_factor *= factor;
+        }
+    }
+
+    relax_factor
+}
+
 fn read_monkeys(file_str: &str) -> Result<Vec<Monkey>, String> {
     file_str.trim().split("\n\n").enumerate().map(|(index, monkey_string)| {
         let monkey = Monkey::read(monkey_string)?;
@@ -28,8 +85,16 @@ fn read_monkeys(file_str: &str) -> Result<Vec<Monkey>, String> {
     }).collect()
 }
 
-fn relax(worry : WorryVal) -> WorryVal {
-    worry / 3
+fn relax_always(worry : WorryVal, relax_amount : WorryVal) -> WorryVal {
+    worry / relax_amount
+}
+
+fn relax_on_divisible(worry : WorryVal, relax_amount : WorryVal) -> WorryVal {
+    if worry % relax_amount == 0 {
+        worry / relax_amount
+    } else {
+        worry
+    }
 }
 
 fn parse_operand(s : &str) -> Result<Operand, String> {
@@ -117,7 +182,7 @@ impl Monkey {
         })
     }
 
-    fn process(monkeys : &mut Vec<Monkey>, processing_index : MonkeyIndex, do_relax : bool) {
+    fn process(monkeys : &mut Vec<Monkey>, processing_index : MonkeyIndex, relax_amount : WorryVal, should_relax_on_divisible : bool) {
         let processing_monkey = &mut monkeys[processing_index];
 
         let changes = processing_monkey.items.iter()
@@ -131,14 +196,16 @@ impl Monkey {
                     Operand::Old => *worry,
                     Operand::Number(i) => i,
                 };
+                // println!("{:?} {:?} {:?}", left, operator, right);
                 let worry = match operator {
                     Operator::Mult => left * right,
                     Operator::Add => left + right,
                 };
-                let worry = if do_relax {
-                    relax(worry)
+                // println!("{} {}", worry, relax_amount);
+                let worry = if should_relax_on_divisible {
+                    relax_on_divisible(worry, relax_amount)
                 } else {
-                    worry
+                    relax_always(worry, relax_amount)
                 };
                 let (divisible_by, if_success, if_fail) = processing_monkey.pass_func;
                 if worry % divisible_by == 0 {
@@ -174,21 +241,23 @@ fn main() {
 
     let monkey_businesses = read_monkeys(&file_str[..])
     .map(|monkeys| {
-        let mut relax_monkeys = monkeys.clone();
-        for round in 0..20 {
-            for index in 0..relax_monkeys.len() {
-                Monkey::process(&mut relax_monkeys, index, true)
+        let mut relax_20_monkeys = monkeys.clone();
+        for _round in 0..20 {
+            for index in 0..relax_20_monkeys.len() {
+                Monkey::process(&mut relax_20_monkeys, index, 20, false)
             }
         }
-        let monkey_business_20 = Monkey::monkey_business(&relax_monkeys);
+        let monkey_business_20 = Monkey::monkey_business(&relax_20_monkeys);
 
-        let mut no_relax_monkeys = monkeys.clone();
+        let mut relax_factors_monkeys = monkeys.clone();
+        let relax_factor = get_relax_factor(&relax_factors_monkeys);
         for round in 0..10000 {
-            for index in 0..no_relax_monkeys.len() {
-                Monkey::process(&mut no_relax_monkeys, index, false)
+            // println!("{}", round);
+            for index in 0..relax_factors_monkeys.len() {
+                Monkey::process(&mut relax_factors_monkeys, index, relax_factor, true);
             }
         }
-        let monkey_business_10000 = Monkey::monkey_business(&no_relax_monkeys);
+        let monkey_business_10000 = Monkey::monkey_business(&relax_factors_monkeys);
 
         (monkey_business_20, monkey_business_10000)
     });
